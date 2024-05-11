@@ -13,6 +13,7 @@ WebServer::WebServer(
             int sqlPort, const char* sqlUser, const  char* sqlPwd,
             const char* dbName, int connPoolNum, int threadNum,
             bool openLog, int logLevel, int logQueSize):
+            
             port_(port), openLinger_(OptLinger), timeoutMS_(timeoutMS), isClose_(false),
             timer_(new HeapTimer()), threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
     {
@@ -86,18 +87,16 @@ void WebServer::Start() {
             /* 处理事件 */
             int fd = epoller_->GetEventFd(i);
             uint32_t events = epoller_->GetEvents(i);
-            if(fd == listenFd_) {
+            // printf("listenfd: %d\n", listenFd_);
+            if (fd == listenFd_) {
                 DealListen_();
-            }
-            else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
+            } else if (events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 assert(users_.count(fd) > 0);
                 CloseConn_(&users_[fd]);
-            }
-            else if(events & EPOLLIN) {
+            } else if (events & EPOLLIN) {
                 assert(users_.count(fd) > 0);
                 DealRead_(&users_[fd]);
-            }
-            else if(events & EPOLLOUT) {
+            } else if (events & EPOLLOUT) {
                 assert(users_.count(fd) > 0);
                 DealWrite_(&users_[fd]);
             } else {
